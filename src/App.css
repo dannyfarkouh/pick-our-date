@@ -1,0 +1,607 @@
+.screen {
+  min-height: 100vh;
+  /* dvh keeps the text optically centered while Safari's toolbar collapses on
+     scroll; vh above it is the fallback for browsers without dvh. */
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  /* Vertical padding keys off viewport height, not width: two paragraphs and a
+     rule need the room back when a phone is turned to landscape. */
+  --v-pad: clamp(0.625rem, 3vh, 2.5rem);
+  padding: var(--v-pad) clamp(1rem, 5vw, 2.5rem);
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    var(--bg-inner) 0%,
+    var(--bg-outer) 100%
+  );
+}
+
+/* Reserves room below the centred content for the fixed Next button, so the
+   letter can never grow long enough to sit underneath it. The button's own
+   footprint (env() inset + gap + height) is duplicated here deliberately —
+   it has to match what .next-button actually occupies, not just approximate
+   it, for the guarantee to hold on the shortest viewports. */
+.screen--has-nav {
+  padding-bottom: calc(
+    var(--v-pad) + env(safe-area-inset-bottom, 0px) + clamp(1.125rem, 6vh, 3.25rem)
+  );
+}
+
+/* Forward (advancing) and back (returning) each get their own entrance and
+   exit direction, so the whole sequence reads as one continuous strip being
+   stepped through rather than a series of unrelated cuts: moving forward
+   pulls new content up from below while the old content lifts away above it;
+   moving back does the reverse. */
+@keyframes page-enter-forward {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-enter-back {
+  from {
+    opacity: 0;
+    transform: translateY(-0.6rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes page-leave-forward {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+}
+
+@keyframes page-leave-back {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+}
+
+.screen--enter-forward {
+  animation: page-enter-forward 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.screen--enter-back {
+  animation: page-enter-back 380ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.screen--leave-forward {
+  animation: page-leave-forward 220ms ease-in both;
+  pointer-events: none;
+}
+
+.screen--leave-back {
+  animation: page-leave-back 220ms ease-in both;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen--enter-forward,
+  .screen--enter-back,
+  .screen--leave-forward,
+  .screen--leave-back {
+    animation: none;
+  }
+}
+
+.letter {
+  /* Single source for the type scale so the Korean block can derive its own
+     size from the English one rather than repeating the clamp. The vh term
+     only bites on short viewports — phone landscape, where 5.2vw alone would
+     set 26px type and push two paragraphs off the screen. Every portrait size
+     is governed by the vw term exactly as before. */
+  --message-size: min(clamp(1.1875rem, 5.2vw, 1.625rem), 4.2vh);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.letter__divider {
+  width: min(7rem, 45%);
+  height: 1px;
+  /* Tracks the type scale so the rule keeps its proportion at every size, but
+     yields to viewport height when there is little of it. */
+  margin: min(calc(var(--message-size) * 1.4), 4vh) 0;
+  border: 0;
+  /* Fades out at both ends so it reads as a soft rule rather than a hard bar. */
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.5),
+    transparent
+  );
+}
+
+.message {
+  margin: 0;
+  /* Caps the line length on wide screens so the paragraph keeps a readable
+     measure (~45 characters) instead of stretching to the viewport. Below
+     tablet width the viewport is narrower than this and wins. */
+  max-width: 22em;
+  font-size: var(--message-size);
+  font-weight: 500;
+  font-optical-sizing: auto;
+  /* Fraunces' SOFT axis rounds off the terminals — less newsprint, more warmth.
+     Ignored by faces that have no such axis, which includes the Korean one. */
+  font-variation-settings: 'SOFT' 40;
+  /* A touch open rather than the display type's negative tracking: light text
+     on a dark ground blooms slightly, and this keeps it from closing up. */
+  letter-spacing: 0.01em;
+  line-height: 1.55;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.message--korean {
+  font-family: var(--font-korean);
+  /* Hangul fills its em box where Latin lowercase does not, so it reads larger
+     at an identical font-size. Backing off slightly evens the two blocks out. */
+  font-size: calc(var(--message-size) * 0.94);
+  /* Hangul is denser vertically and needs more leading than Latin to breathe. */
+  line-height: 1.75;
+  /* Korean permits a break between any two syllables, which strands fragments
+     of a word at line ends. keep-all restricts breaking to spaces, which is
+     how Korean is actually meant to wrap. */
+  word-break: keep-all;
+  /* Safety valve so a single unbroken run can still never overflow. */
+  overflow-wrap: break-word;
+  /* The Latin tracking above does not suit syllable blocks. */
+  letter-spacing: 0;
+}
+
+/* Each character occupies its final position from the very first frame; only
+   colour and glow change as typing advances. That is what keeps the wrapped,
+   centred paragraphs completely still while they fill in. */
+.message__char {
+  position: relative;
+  color: transparent;
+  /* Identical shadow geometry to the typed state at zero alpha, so the glow
+     interpolates smoothly instead of jumping in from `none`. */
+  text-shadow:
+    0 0 0.3em var(--glow-off),
+    0 0 0.8em var(--glow-off);
+  transition:
+    color 70ms linear,
+    text-shadow 70ms linear;
+}
+
+.message__char.is-typed {
+  color: var(--text-primary);
+  text-shadow:
+    0 0 0.3em var(--glow-near),
+    0 0 0.8em var(--glow-far);
+}
+
+/* Sits on the next character to be typed, so it appears before the first
+   keystroke and vanishes on the last one with no extra state to track.
+   Absolutely positioned, so it adds no width and cannot nudge the line. */
+.message__char.is-caret::before {
+  content: '';
+  position: absolute;
+  left: -0.04em;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.055em;
+  height: 0.85em;
+  border-radius: 0.02em;
+  /* An explicit colour, not currentColor — the character it hangs off is
+     still transparent at this point. */
+  background: var(--text-primary);
+  box-shadow: 0 0 0.35em var(--glow-near);
+  animation: cursor-blink 1s steps(1, end) infinite;
+}
+
+@keyframes cursor-blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+  50.01%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message__char {
+    transition: none;
+  }
+
+  .message__char.is-caret::before {
+    animation: none;
+  }
+}
+
+/* ---------- Next button ---------- */
+
+.next-button {
+  position: fixed;
+  right: calc(env(safe-area-inset-right, 0px) + clamp(0.75rem, 4vw, 1.5rem));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(0.4375rem, 2.5vh, 1.5rem));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: min(clamp(0.8125rem, 2.6vw, 0.9375rem), 3.6vh);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  text-shadow: 0 0 0.5em var(--glow-far);
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.next-button:hover {
+  transform: translateX(0.2em);
+}
+
+.next-button:active {
+  transform: translateX(0.1em);
+}
+
+.next-button:focus-visible {
+  outline: 2px solid var(--color-pink-300);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.next-button__icon {
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .next-button {
+    transition: none;
+  }
+}
+
+/* ---------- Selection Flow Pages ---------- */
+
+/* Stretches the grid cell vertically instead of shrink-wrapping it, so the
+   option list below can grow to fill the reserved space rather than leaving
+   it empty under a centred block. Needs an explicit (not just min-) height:
+   .screen's own height is otherwise indefinite, which breaks percentage
+   heights on the descendants that rely on it to size the scrollable list. */
+.screen--stretch {
+  align-items: stretch;
+  justify-items: center;
+  height: 100vh;
+  height: 100dvh;
+}
+
+.selection-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 28em;
+  /* No explicit height: percentage heights here would depend on the grid
+     row's size, which itself depends on this item's content height — a
+     cyclic reference that browsers break by falling back to content-based
+     sizing (letting it overflow). align-items: stretch on .screen--stretch
+     assigns this item its used size directly, sidestepping the cycle. */
+  min-height: 0;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+}
+
+.selection-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 5vw, 1.75rem);
+  font-weight: 500;
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 40;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.selection-options {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: clamp(0.875rem, 2.5vh, 1.25rem);
+  flex: 1;
+  /* Lets the list shrink below its content height instead of forcing the
+     column taller than the space it's been given — without this, a page
+     with many options pushes the back button and overflows the viewport
+     rather than scrolling internally. */
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.selection-option {
+  flex: 1;
+  min-height: clamp(3rem, 15vh, 5rem);
+  padding: clamp(0.75rem, 3vw, 1.25rem);
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 0.375rem;
+  background: rgb(255 255 255 / 0.08);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  font-weight: 500;
+  font-variation-settings: 'SOFT' 40;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 160ms ease;
+  text-shadow: 0 0 0.5em var(--glow-off);
+}
+
+.selection-option:hover {
+  background: rgb(255 255 255 / 0.15);
+  text-shadow: 0 0 0.5em var(--glow-near);
+  transform: translateY(-2px);
+}
+
+.selection-option:active {
+  transform: translateY(-1px);
+  background: rgb(255 255 255 / 0.12);
+}
+
+.selection-option:focus-visible {
+  outline: 2px solid var(--color-pink-300);
+  outline-offset: 2px;
+}
+
+/* Below tablet width the four options should fill the viewport edge to edge,
+   per the mobile-first brief. Above it, letting flex:1 keep expanding would
+   turn each option into a slab several hundred pixels tall, so a cap kicks in
+   once there's width to spare. */
+@media (min-width: 640px) {
+  .selection-option {
+    flex: none;
+    max-height: 7rem;
+  }
+
+  .selection-options {
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-option {
+    transition: none;
+  }
+}
+
+.custom-input {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  width: 100%;
+  min-height: clamp(2.75rem, 10vh, 3.5rem);
+  padding: clamp(0.625rem, 2.5vw, 0.875rem) clamp(0.875rem, 3vw, 1.25rem);
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 0.375rem;
+  background: rgb(255 255 255 / 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.custom-input__field {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(0.9375rem, 2.8vw, 1.0625rem);
+  font-weight: 500;
+  font-variation-settings: 'SOFT' 40;
+  letter-spacing: 0.01em;
+}
+
+.custom-input__field::placeholder {
+  color: rgb(255 255 255 / 0.55);
+}
+
+.custom-input__field:focus {
+  outline: none;
+}
+
+.custom-input__submit {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  opacity: 0.55;
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.custom-input__submit:hover,
+.custom-input__submit:focus-visible {
+  opacity: 1;
+  transform: translateX(0.15em);
+}
+
+.custom-input__submit:focus-visible {
+  outline: 2px solid var(--color-pink-300);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .custom-input__submit {
+    transition: none;
+  }
+}
+
+/* ---------- Confirmation Page ---------- */
+
+.confirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 28em;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+}
+
+.confirmation-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 5vw, 1.75rem);
+  font-weight: 500;
+  font-family: var(--font-display);
+  font-variation-settings: 'SOFT' 40;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.confirmation-summary {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2.5vh, 1.5rem);
+  width: 100%;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 0.375rem;
+  background: rgb(255 255 255 / 0.08);
+  backdrop-filter: blur(10px);
+}
+
+.confirmation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  font-size: clamp(0.9375rem, 2.5vw, 1.125rem);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
+}
+
+.confirmation-label {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.confirmation-value {
+  font-weight: 600;
+  text-shadow: 0 0 0.35em var(--glow-near);
+}
+
+.submit-button {
+  width: 100%;
+  padding: clamp(0.75rem, 2.5vh, 1rem);
+  border: 1px solid rgb(255 255 255 / 0.3);
+  border-radius: 0.375rem;
+  background: rgb(255 255 255 / 0.12);
+  backdrop-filter: blur(10px);
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  font-weight: 500;
+  font-variation-settings: 'SOFT' 40;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: all 160ms ease;
+  text-shadow: 0 0 0.5em var(--glow-far);
+}
+
+.submit-button:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.18);
+  transform: scale(1.02);
+}
+
+.submit-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.submit-button:focus-visible {
+  outline: 2px solid var(--color-pink-300);
+  outline-offset: 2px;
+}
+
+/* ---------- Back Button ---------- */
+
+.back-button {
+  position: fixed;
+  left: calc(env(safe-area-inset-left, 0px) + clamp(0.75rem, 4vw, 1.5rem));
+  bottom: calc(env(safe-area-inset-bottom, 0px) + clamp(0.4375rem, 2.5vh, 1.5rem));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: min(clamp(2.25rem, 6vw, 2.75rem), 5vh);
+  height: min(clamp(2.25rem, 6vw, 2.75rem), 5vh);
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform 160ms ease;
+}
+
+.back-button:hover {
+  transform: translateX(-0.2em);
+}
+
+.back-button:active {
+  transform: translateX(-0.1em);
+}
+
+.back-button:focus-visible {
+  outline: 2px solid var(--color-pink-300);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-button {
+    transition: none;
+  }
+}
+
+/* ---------- Placeholder (page two) ---------- */
+
+.placeholder {
+  margin: 0;
+  max-width: 20em;
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 500;
+  font-variation-settings: 'SOFT' 40;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  text-align: center;
+  color: var(--text-primary);
+}

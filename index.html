@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- viewport-fit=cover lets the background run edge-to-edge on notched
+         phones and makes env(safe-area-inset-*) resolve to real values, which
+         the fixed Next button uses to clear the home-indicator area. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <!-- Tints Safari's browser chrome to match the page edges on iOS -->
+    <meta name="theme-color" content="#7d2650" />
+    <title>Pick Our Date</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Noto Serif KR carries the Hangul; Google serves it as unicode-range
+         subsets, so only the syllable blocks actually used are downloaded. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..700,0..100&family=Noto+Serif+KR:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

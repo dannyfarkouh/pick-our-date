@@ -1,0 +1,65 @@
+/* ---------- Theme ---------- */
+:root {
+  /* Baby pink scale, pale through deep. Saturated rather than dusty, so the
+     pinks read as rose and not as mauve. 300 is true baby pink. */
+  --color-pink-100: #fce4ee;
+  --color-pink-200: #f8c6da;
+  --color-pink-300: #f2a0c1;
+  --color-pink-400: #e874a0;
+  --color-pink-500: #db4f87;
+  --color-pink-600: #c23d72;
+  --color-pink-800: #7d2650;
+  --color-pink-900: #5c1c3c;
+  --color-white: #ffffff;
+
+  /* Pink ground, white type. 600 is about as light as the ground can go and
+     still carry white text — the pale end of the scale sits near 1.9:1, which
+     washes out completely on a phone outdoors. */
+  --bg-inner: var(--color-pink-600);
+  --bg-outer: var(--color-pink-800);
+  --text-primary: var(--color-white);
+
+  /* Soft baby-pink halo behind the type. The zero-alpha variant exists so the
+     glow can be transitioned rather than jumping in from `none`. */
+  --glow-near: rgb(242 160 193 / 0.45);
+  --glow-far: rgb(242 160 193 / 0.22);
+  --glow-off: rgb(242 160 193 / 0);
+
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Palatino,
+    Georgia, serif;
+
+  /* Fraunces leads so Latin characters and punctuation inside Korean text keep
+     the same face as the English paragraph; fallback is per-character, so
+     Hangul drops through to the Myeongjo (serif) faces behind it. */
+  --font-korean: 'Fraunces', 'Noto Serif KR', AppleMyungjo, 'Nanum Myeongjo',
+    Batang, 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  /* Tells the browser this is a dark page, so its own chrome — scrollbars,
+     and any form controls we add later — comes through dark rather than
+     white-on-blue. Also avoids a white flash before the CSS lands. */
+  color-scheme: dark;
+  /* Matches the page's outer edge so iOS rubber-band scrolling doesn't
+     flash white past the top or bottom of the gradient. */
+  background-color: var(--bg-outer);
+  /* Stops Safari inflating text when an iPhone is turned to landscape. */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  /* Light type on a dark ground renders optically heavy with subpixel
+     antialiasing; this thins it back to the intended weight on iOS/macOS. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
