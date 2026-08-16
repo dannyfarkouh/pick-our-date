@@ -3,6 +3,14 @@
   /* dvh keeps the text optically centered while Safari's toolbar collapses on
      scroll; vh above it is the fallback for browsers without dvh. */
   min-height: 100dvh;
+  /* Containing block for decorative absolutely-positioned elements (the
+     floating roses) — paired with z-index so it also establishes its own
+     stacking context. Without that, a negative-z-index rose meant to sit
+     behind the text but in front of the gradient would instead escape to the
+     document root's stacking context, where this element's own background
+     (painted later, as ordinary in-flow content up there) covers it. */
+  position: relative;
+  z-index: 0;
   display: grid;
   place-items: center;
   /* Vertical padding keys off viewport height, not width: two paragraphs and a
@@ -25,6 +33,55 @@
   padding-bottom: calc(
     var(--v-pad) + env(safe-area-inset-bottom, 0px) + clamp(1.125rem, 6vh, 3.25rem)
   );
+}
+
+/* ---------- Floating roses (letter page only) ---------- */
+
+/* Purely decorative, so they sit outside the grid flow entirely — sized and
+   inset conservatively enough to stay clear of the viewport edge even on the
+   narrowest/shortest tested phones, since nothing here should ever be able
+   to reintroduce the scroll/overlap the layout was tuned to avoid. */
+.floating-rose {
+  position: absolute;
+  width: clamp(4rem, 15vw, 6.5rem);
+  height: auto;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgb(0 0 0 / 0.28));
+  animation: rose-float 7s ease-in-out infinite;
+}
+
+.floating-rose--upper {
+  top: clamp(0.5rem, 2vh, 1.5rem);
+  right: clamp(0.25rem, 3vw, 1.25rem);
+  /* Positive z-index: paints above the non-positioned .letter text. */
+  z-index: 5;
+  transform: rotate(-9deg);
+}
+
+.floating-rose--lower {
+  bottom: clamp(0.5rem, 2vh, 1.5rem);
+  left: clamp(0.25rem, 3vw, 1.25rem);
+  /* Negative z-index: paints below the non-positioned .letter text, but
+     still above .screen's own background. */
+  z-index: -1;
+  transform: rotate(11deg);
+  animation-delay: -3.5s;
+}
+
+@keyframes rose-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-rose {
+    animation: none;
+  }
 }
 
 /* Forward (advancing) and back (returning) each get their own entrance and
@@ -592,16 +649,20 @@
   }
 }
 
-/* ---------- Placeholder (page two) ---------- */
+/* ---------- Sent Page ---------- */
 
-.placeholder {
+.sent-message {
   margin: 0;
-  max-width: 20em;
-  font-size: clamp(1rem, 4vw, 1.25rem);
+  max-width: 22em;
+  font-size: clamp(1.375rem, 5.5vw, 2rem);
   font-weight: 500;
+  font-family: var(--font-display);
   font-variation-settings: 'SOFT' 40;
   letter-spacing: 0.01em;
   line-height: 1.5;
   text-align: center;
   color: var(--text-primary);
+  text-shadow:
+    0 0 0.3em var(--glow-near),
+    0 0 0.8em var(--glow-far);
 }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import emailjs from "@emailjs/browser";
+import blueRose from "./assets/blue-rose.png";
 import "./App.css";
 
 // Placeholder wording. Swap either string freely — everything below is driven
@@ -21,8 +22,7 @@ function prefersReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-// Initialize EmailJS with placeholder values — user will replace with their own
-emailjs.init("YOUR_PUBLIC_KEY_HERE");
+emailjs.init("VFmkLwm16UeNft5se");
 
 const SELECTION_PAGES = [
     {
@@ -32,7 +32,7 @@ const SELECTION_PAGES = [
     },
     {
         id: "clothingStyle",
-        title: "Color Code",
+        title: "Clothing Color Code",
         options: ["Black", "White", "Beige"],
     },
     {
@@ -151,11 +151,23 @@ function NextButton({ onClick }) {
 function LetterPage({ onNext, isLeaving }) {
     return (
         <main className={"screen screen--has-nav" + (isLeaving ? " screen--leave-forward" : "")}>
+            <img
+                src={blueRose}
+                alt=""
+                aria-hidden="true"
+                className="floating-rose floating-rose--upper"
+            />
             <div className="letter">
                 <TypedParagraph text={MESSAGE_EN} className="message" lang="en" />
                 <hr className="letter__divider" />
                 <TypedParagraph text={MESSAGE_KO} className="message message--korean" lang="ko" />
             </div>
+            <img
+                src={blueRose}
+                alt=""
+                aria-hidden="true"
+                className="floating-rose floating-rose--lower"
+            />
             <NextButton onClick={onNext} />
         </main>
     );
@@ -274,12 +286,33 @@ function ConfirmationPage({ selections, onBack, onSubmit, isSubmitting, directio
     );
 }
 
+function SentPage({ direction, isLeaving }) {
+    const transitionClass = isLeaving
+        ? direction === "back"
+            ? " screen--leave-back"
+            : " screen--leave-forward"
+        : direction === "back"
+          ? " screen--enter-back"
+          : " screen--enter-forward";
+
+    return (
+        <main className={"screen" + transitionClass}>
+            <p className="sent-message">
+                Your selections have been sent!
+                <br />
+                See you soon princess Sarah ❤️
+            </p>
+        </main>
+    );
+}
+
 function DateOptionsPage({ onBack }) {
     const [currentPageIndex, setCurrentPageIndex] = useState(0);
     const [selections, setSelections] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLeaving, setIsLeaving] = useState(false);
     const [direction, setDirection] = useState("forward");
+    const [hasSubmitted, setHasSubmitted] = useState(false);
 
     // Plays the current page's exit animation, then applies `commit` (which
     // switches the page/selection state) once it's finished, so the outgoing
@@ -321,20 +354,15 @@ function DateOptionsPage({ onBack }) {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
-            await emailjs.send(
-                "service_XXXXX", // Replace with actual EmailJS Service ID
-                "template_XXXXX", // Replace with actual EmailJS Template ID
-                {
-                    selections_json: JSON.stringify(selections, null, 2),
-                    dateCategory: selections.dateCategory || "",
-                    clothingStyle: selections.clothingStyle || "",
-                    foodType: selections.foodType || "",
-                    day: selections.day || "",
-                    alcoholicBeverage: selections.alcoholicBeverage || "",
-                },
-            );
-            alert("Your selections have been sent! Thank you 💙");
-            transitionTo("forward", onBack);
+            await emailjs.send("service_25c7e3g", "template_zg4t5dn", {
+                selections_json: JSON.stringify(selections, null, 2),
+                dateCategory: selections.dateCategory || "",
+                clothingStyle: selections.clothingStyle || "",
+                foodType: selections.foodType || "",
+                day: selections.day || "",
+                alcoholicBeverage: selections.alcoholicBeverage || "",
+            });
+            transitionTo("forward", () => setHasSubmitted(true));
         } catch (error) {
             console.error("EmailJS error:", error);
             alert("There was an issue sending your selections. Please try again.");
@@ -342,6 +370,10 @@ function DateOptionsPage({ onBack }) {
             setIsSubmitting(false);
         }
     };
+
+    if (hasSubmitted) {
+        return <SentPage direction={direction} isLeaving={isLeaving} />;
+    }
 
     if (currentPageIndex < SELECTION_PAGES.length) {
         return (
