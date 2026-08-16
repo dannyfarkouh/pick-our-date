@@ -314,11 +314,18 @@ function SentPage({ direction, isLeaving }) {
         <main className={"screen" + transitionClass}>
             <div className="sent">
                 <GlowPhoto src={sarahFoodImage} alt="A photo of you enjoying dinner" size="large" />
-                <p className="sent-message">
-                    Your selections have been sent!
-                    <br />
-                    See you soon princess Sarah ❤️
-                </p>
+                <div className="sent-message">
+                    <p className="sent-message__korean" lang="ko">
+                        그리움은 밤마다 별이 되어 반짝이고
+                    </p>
+                    <p className="sent-message__korean" lang="ko">
+                        너를 향한 마음은 강물처럼 흐르네
+                    </p>
+                    <p className="sent-message__korean" lang="ko">
+                        언제나 그 자리에 내 사랑은 머무네
+                    </p>
+                    <p className="sent-message__closing">See you soon princess Sarah ❤️</p>
+                </div>
                 <GlowPhoto
                     src={sarahAndMeImage}
                     alt="A photo of us together"
