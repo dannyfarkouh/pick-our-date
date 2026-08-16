@@ -50,22 +50,42 @@
   animation: rose-float 7s ease-in-out infinite;
 }
 
-.floating-rose--upper {
+/* Upper pair sits over the text (positive z-index paints above the
+   non-positioned .letter text); lower pair sits under it (negative z-index
+   paints below .letter but still above .screen's own background). Left/right
+   partners are true mirror images of each other (scaleX(-1)) rather than
+   independently rotated, so the two read as one balanced pair. */
+.floating-rose--upper-right {
   top: clamp(0.5rem, 2vh, 1.5rem);
   right: clamp(0.25rem, 3vw, 1.25rem);
-  /* Positive z-index: paints above the non-positioned .letter text. */
   z-index: 5;
   transform: rotate(-9deg);
 }
 
-.floating-rose--lower {
+.floating-rose--upper-left {
+  top: clamp(0.5rem, 2vh, 1.5rem);
+  left: clamp(0.25rem, 3vw, 1.25rem);
+  z-index: 5;
+  transform: scaleX(-1) rotate(-9deg);
+  animation-delay: -1.8s;
+}
+
+.floating-rose--lower-left {
   bottom: clamp(0.5rem, 2vh, 1.5rem);
   left: clamp(0.25rem, 3vw, 1.25rem);
-  /* Negative z-index: paints below the non-positioned .letter text, but
-     still above .screen's own background. */
   z-index: -1;
   transform: rotate(11deg);
   animation-delay: -3.5s;
+}
+
+.floating-rose--lower-right {
+  /* Extra bottom clearance (vs. the left partner) so this doesn't sit under
+     the fixed Next button, which occupies the actual bottom-right corner. */
+  bottom: clamp(2.75rem, 9vh, 4.5rem);
+  right: clamp(0.25rem, 3vw, 1.25rem);
+  z-index: -1;
+  transform: scaleX(-1) rotate(11deg);
+  animation-delay: -5.3s;
 }
 
 @keyframes rose-float {
@@ -528,6 +548,81 @@
   gap: clamp(1.5rem, 4vh, 2.5rem);
 }
 
+.glow-photo {
+  position: relative;
+  width: clamp(7rem, 32vw, 10rem);
+  /* No height/aspect-ratio here — this wrapper only exists to give the
+     corner hearts something to position against, and just shrink-wraps
+     the frame below. */
+  flex-shrink: 0;
+}
+
+.glow-photo--large {
+  width: clamp(8.25rem, 38vw, 12rem);
+}
+
+.glow-photo__frame {
+  /* aspect-ratio lives here, directly on the element with a definite width,
+     rather than on .glow-photo above: putting it up there instead
+     forced height through a percentage chain (this frame's height: 100%,
+     which depends on the wrapper's height, which needs the ratio to have
+     already resolved) that browsers can't resolve, so it fell back to the
+     photo's own 3:4 intrinsic ratio instead of the square this needs. */
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  /* Box-shadow version of the type's glow, so the photo halo reads as part
+     of the same light rather than a different effect. */
+  box-shadow:
+    0 0 1.5em var(--glow-near),
+    0 0 3.5em var(--glow-far);
+}
+
+.glow-photo__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Biased toward the top: a plain center crop of a portrait photo pulls in
+     too much street and not enough face. */
+  object-position: 50% 20%;
+}
+
+/* Sit outside .glow-photo__frame (not inside it) since the frame's
+   own overflow: hidden — needed to clip the photo into a square — would
+   clip these too if they were nested in there instead. */
+.glow-photo__heart {
+  position: absolute;
+  font-size: clamp(1.25rem, 5vw, 1.75rem);
+  filter: drop-shadow(0 0 0.4em var(--glow-near));
+  pointer-events: none;
+}
+
+.glow-photo__heart--top-left {
+  top: -0.5rem;
+  left: -0.5rem;
+  transform: rotate(-12deg);
+}
+
+.glow-photo__heart--bottom-right {
+  bottom: -0.5rem;
+  right: -0.5rem;
+  transform: rotate(12deg);
+}
+
+.glow-photo__heart--top-right {
+  top: -0.5rem;
+  right: -0.5rem;
+  transform: rotate(12deg);
+}
+
+.glow-photo__heart--bottom-left {
+  bottom: -0.5rem;
+  left: -0.5rem;
+  transform: rotate(-12deg);
+}
+
 .confirmation-title {
   margin: 0;
   font-size: clamp(1.25rem, 5vw, 1.75rem);
@@ -650,6 +745,13 @@
 }
 
 /* ---------- Sent Page ---------- */
+
+.sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+}
 
 .sent-message {
   margin: 0;

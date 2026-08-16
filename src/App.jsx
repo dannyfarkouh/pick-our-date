@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import emailjs from "@emailjs/browser";
 import blueRose from "./assets/blue-rose.png";
+import sarahAloImage from "./assets/sarah-alo-image.jpg";
+import sarahFoodImage from "./assets/sarah-food-image.jpg";
+import sarahAndMeImage from "./assets/sarah-and-me-image.jpg";
 import "./App.css";
 
 // Placeholder wording. Swap either string freely — everything below is driven
@@ -151,23 +154,15 @@ function NextButton({ onClick }) {
 function LetterPage({ onNext, isLeaving }) {
     return (
         <main className={"screen screen--has-nav" + (isLeaving ? " screen--leave-forward" : "")}>
-            <img
-                src={blueRose}
-                alt=""
-                aria-hidden="true"
-                className="floating-rose floating-rose--upper"
-            />
+            <img src={blueRose} alt="" aria-hidden="true" className="floating-rose floating-rose--upper-left" />
+            <img src={blueRose} alt="" aria-hidden="true" className="floating-rose floating-rose--upper-right" />
             <div className="letter">
                 <TypedParagraph text={MESSAGE_EN} className="message" lang="en" />
                 <hr className="letter__divider" />
                 <TypedParagraph text={MESSAGE_KO} className="message message--korean" lang="ko" />
             </div>
-            <img
-                src={blueRose}
-                alt=""
-                aria-hidden="true"
-                className="floating-rose floating-rose--lower"
-            />
+            <img src={blueRose} alt="" aria-hidden="true" className="floating-rose floating-rose--lower-left" />
+            <img src={blueRose} alt="" aria-hidden="true" className="floating-rose floating-rose--lower-right" />
             <NextButton onClick={onNext} />
         </main>
     );
@@ -241,6 +236,25 @@ function SelectionPage({ pageConfig, onSelect, onBack, direction, isLeaving }) {
     );
 }
 
+function GlowPhoto({ src, alt, hearts = "top-left-bottom-right", size = "default" }) {
+    const [firstCorner, secondCorner] =
+        hearts === "top-right-bottom-left" ? ["top-right", "bottom-left"] : ["top-left", "bottom-right"];
+
+    return (
+        <div className={"glow-photo" + (size === "large" ? " glow-photo--large" : "")}>
+            <div className="glow-photo__frame">
+                <img src={src} alt={alt} className="glow-photo__img" />
+            </div>
+            <span className={`glow-photo__heart glow-photo__heart--${firstCorner}`} aria-hidden="true">
+                💗
+            </span>
+            <span className={`glow-photo__heart glow-photo__heart--${secondCorner}`} aria-hidden="true">
+                💗
+            </span>
+        </div>
+    );
+}
+
 function ConfirmationPage({ selections, onBack, onSubmit, isSubmitting, direction, isLeaving }) {
     const formatKey = (key) => {
         const spaced = key.replace(/([A-Z])/g, " $1").trim();
@@ -258,6 +272,7 @@ function ConfirmationPage({ selections, onBack, onSubmit, isSubmitting, directio
     return (
         <main className={"screen screen--has-nav" + transitionClass}>
             <div className="confirmation">
+                <GlowPhoto src={sarahAloImage} alt="A photo of you" />
                 <h1 className="confirmation-title">Confirm Your Selections Miss Sarah</h1>
                 <div className="confirmation-summary">
                     {Object.entries(selections).map(([key, value]) => (
@@ -297,11 +312,20 @@ function SentPage({ direction, isLeaving }) {
 
     return (
         <main className={"screen" + transitionClass}>
-            <p className="sent-message">
-                Your selections have been sent!
-                <br />
-                See you soon princess Sarah ❤️
-            </p>
+            <div className="sent">
+                <GlowPhoto src={sarahFoodImage} alt="A photo of you enjoying dinner" size="large" />
+                <p className="sent-message">
+                    Your selections have been sent!
+                    <br />
+                    See you soon princess Sarah ❤️
+                </p>
+                <GlowPhoto
+                    src={sarahAndMeImage}
+                    alt="A photo of us together"
+                    hearts="top-right-bottom-left"
+                    size="large"
+                />
+            </div>
         </main>
     );
 }
