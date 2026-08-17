@@ -325,6 +325,7 @@ function SentPage({ direction, isLeaving }) {
                         언제나 그 자리에 내 사랑은 머무네
                     </p>
                     <p className="sent-message__closing">See you soon princess Sarah ❤️</p>
+                    <p>P.S. The desert is cheesecake 😘</p>
                 </div>
                 <GlowPhoto
                     src={sarahAndMeImage}
